@@ -1,9 +1,5 @@
 import cv2
 
-capture = cv2.VideoCapture(0)
-capture.set(3, 640)
-capture.set(4, 480)
-
 coco_file = r'files\coco.names'
 path_conf = r'files\ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt'
 path_weight = r'files\frozen_inference_graph.pb'
@@ -18,14 +14,24 @@ detection_model.setInputScale(1.0 / 127.5)
 detection_model.setInputMean((127.5, 127.5, 127.5))
 detection_model.setInputSwapRB(True)
 
+capture = cv2.VideoCapture(1)
+sfull, proof = capture.read()
+
+try:
+    id_obj, configs, box = detection_model.detect(proof, confThreshold=0.45)
+except:
+    capture = cv2.VideoCapture(0)
+
+capture.set(3, 640)
+capture.set(4, 480)
+
+
 while True:
     sfull, img = capture.read()
 
     id_obj, configs, box = detection_model.detect(img, confThreshold=0.45)
-    print(id_obj, box)
 
     if len(id_obj) != 0:
-
         for id_s, confidence_s, box_s in zip(id_obj.flatten(), configs.flatten(), box):
             cv2.rectangle(img, box_s, color=(0, 255, 0), thickness=2, lineType=-1, shift=None)
             cv2.putText(img, names_array[id_s - 1].upper() + " - To: " + str(round(confidence_s * 100, 2)),
